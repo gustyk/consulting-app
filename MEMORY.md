@@ -21,17 +21,30 @@
 - Run `npx prisma migrate dev` after `.env.local` is filled
 
 **Tests / checks run**:
-- `npm run build` ✓
-- `npm run typecheck` ✓ (after Prisma 7 config fix)
-- `npx prisma generate` ✓ (Prisma 7 + pg adapter)
+- `npm run build` ✓ (all routes compile: /login, /crm, /clients, /proposals, /projects, /finance, /partners, /trainings, /documents, /api/cron/backup, /auth/callback)
+- `npm run typecheck` ✓
+- `npx prisma generate` ✓
+
+**Completed this pass (0.4–0.8)**:
+- Auth: `src/lib/auth/session.ts` (getServerSession), `src/proxy.ts` (Next 16 proxy convention, replaces deprecated middleware)
+- RBAC: `src/lib/auth/permissions.ts` (PERMISSIONS map, ROLE_PERMISSIONS, hasPermission), `src/lib/auth/guards.ts` (requirePermission/requireRole/requireUser)
+- Activity: `src/lib/activity/log.ts` (logActivity utility)
+- Utils: `src/lib/utils/number.ts` (proposal/invoice/project/cert number generators), `src/lib/utils/validation.ts` (shared Zod schemas)
+- Inngest: `src/lib/inngest/client.ts`
+- Shadcn UI: button, card, table, input, select, dropdown-menu, tabs, badge, sonner, sheet, dialog, label, textarea, popover, calendar, command, combobox
+- Base layout: `(dashboard)/layout.tsx` (sidebar nav), `(dashboard)/page.tsx` (home), `login/page.tsx` + `modules/auth/components/login-form.tsx`
+- Seed: `prisma/seed.ts` (roles/permissions/role_permissions), `db:seed` script
+- Backup: `src/lib/backup/run.ts` + `/api/cron/backup` route + `vercel.json` cron config
+- Font: replaced Google Geist with system font stack (build has no network for font fetch)
 
 **Blockers**:
-- Cannot run `prisma migrate dev` until user fills `.env.local` DATABASE_URL + DATABASE_DIRECT_URL and creates Supabase project.
+- Cannot run `prisma migrate dev` / `db:seed` until user fills `.env.local` + `.env` (DATABASE_URL, DATABASE_DIRECT_URL) and creates Supabase project + buckets (clients, proposals, projects, trainings, backups).
 
 **Notes**:
-- Prisma 7 changed: datasource `url`/`directUrl` removed from schema.prisma → moved to `prisma.config.ts` + `PrismaClient({ adapter })` in `src/lib/prisma/client.ts`.
-- Use `@prisma/adapter-pg` + `pg` for Supabase pooler connection.
-- `.env` (gitignored) holds DB vars for Prisma CLI; `.env.local` (gitignored) for Next.js runtime. Both need same DATABASE_URL.
+- Prisma 7: datasource url/directUrl removed from schema.prisma → prisma.config.ts + PrismaClient({adapter}) in src/lib/prisma/client.ts
+- Next 16: middleware → proxy (src/proxy.ts)
+- `.env` / `.env.local` gitignored; only `.env.example` committed
+- Placeholder module pages guard with requirePermission(PERMISSIONS.<x>.view)
 
 **Next recommended step**:
 - User: fill `.env.local`, create buckets, run migration
