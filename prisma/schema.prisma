@@ -1,0 +1,113 @@
+// Prisma schema for Consulting-App Mini ERP
+// Stack: Supabase Postgres (Free Tier) + Prisma
+// Conventions: UUID PK, snake_case, soft delete (deleted_at), timestamps
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// RBAC
+// ============================================
+
+model Role {
+  id            String           @id @default(uuid()) @db.Uuid
+  name          String           @unique // founder, officer, partner, finance
+  description   String?
+  userRoles     UserRole[]
+  rolePerms     RolePermission[]
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  deletedAt     DateTime?        @map("deleted_at")
+
+  @@map("roles")
+}
+
+model Permission {
+  id            String           @id @default(uuid()) @db.Uuid
+  key           String           @unique // e.g. proposals.approve
+  description   String?
+  rolePerms     RolePermission[]
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  deletedAt     DateTime?        @map("deleted_at")
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(uuid()) @db.Uuid
+  roleId       String   @db.Uuid @map("role_id")
+  permissionId String   @db.Uuid @map("permission_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// Links Supabase Auth users (auth.users.id) to roles
+model UserRole {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid @map("user_id") // Supabase auth.users.id
+  roleId    String   @db.Uuid @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ============================================
+// Profiles (extends Supabase Auth users)
+// ============================================
+
+model Profile {
+  id           String    @id @db.Uuid // = auth.users.id
+  email        String    @unique
+  fullName     String?   @map("full_name")
+  phone        String?
+  avatarUrl    String?   @map("avatar_url")
+  role         String    @default("officer") // founder | officer | partner | finance
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@index([role])
+  @@map("profiles")
+}
+
+// ============================================
+// Activity Logging (spatie/laravel-activitylog equivalent)
+// ============================================
+
+model ActivityLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  actorId      String?  @db.Uuid @map("actor_id") // profile/user id
+  actorName    String?  @map("actor_name")
+  action       String // e.g. proposal.approve
+  targetType   String?  @map("target_type") // table name
+  targetId     String?  @db.Uuid @map("target_id")
+  previousValue Json?   @map("previous_value")
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([action])
+  @@map("activity_logs")
+}
