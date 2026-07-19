@@ -33,6 +33,13 @@ export function LeadForm({ leadId, defaultValues }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const initialStatus = useState(
+    () => (defaultValues?.status ?? "new") as CreateLeadInput["status"]
+  )[0];
+  const initialSource = useState(
+    () => (defaultValues?.source ?? "")
+  )[0];
+
   const form = useForm<CreateLeadInput>({
     resolver: zodResolver(createLeadSchema),
     defaultValues: { status: "new", estimatedValue: undefined, ...defaultValues },
@@ -85,7 +92,7 @@ export function LeadForm({ leadId, defaultValues }: Props) {
         <div className="space-y-2">
           <Label>Source</Label>
           <Select
-            defaultValue=""
+            defaultValue={initialSource}
             onValueChange={(v) => form.setValue("source", (v || undefined) as CreateLeadInput["source"])}
           >
             <SelectTrigger>
@@ -118,7 +125,7 @@ export function LeadForm({ leadId, defaultValues }: Props) {
       <div className="space-y-2">
         <Label>Status</Label>
           <Select
-            defaultValue={form.getValues("status") ?? "new"}
+            defaultValue={initialStatus}
             onValueChange={(v) => form.setValue("status", v as CreateLeadInput["status"])}
           >
           <SelectTrigger>
