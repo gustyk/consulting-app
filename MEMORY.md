@@ -118,3 +118,25 @@
 **Blockers**: None. Manual verification (login as Founder, create user) pending real auth session.
 
 **Next**: Phase 1.2 CRM/Leads module
+
+---
+
+## 2026-07-19 — Founder Seed + Trigger Fix
+
+**Files**:
+- `prisma/seed-founder.ts` (creates first Founder user: founder@ibeza.app / Founder@12345)
+- `package.json`: added `db:seed:founder` script
+- DB trigger `handle_new_user()` updated to set `updated_at = NOW()` (Prisma @updatedAt doesn't fire on raw trigger inserts → was violating NOT NULL)
+
+**Credentials created**:
+- Email: `founder@ibeza.app`
+- Password: `Founder@12345`
+- Role: `founder`
+
+**Verified**: profile + userRoles linkage correct in DB.
+
+**Learnings**:
+- Supabase admin API `AuthRetryableFetchError` 500 was actually a DB trigger NOT NULL violation on `profiles.updated_at`, not a network issue.
+- Always set `updated_at` in DB triggers (Prisma @updatedAt only applies via Prisma client, not raw SQL/triggers).
+
+**Next**: Run `npm run dev` for user verification, then Phase 1.2 CRM/Leads.
