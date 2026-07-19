@@ -90,6 +90,9 @@ model Profile {
 
   userRoles   UserRole[]
 
+  leadsAssigned Lead[] @relation("LeadAssignee")
+  leadsCreated  Lead[] @relation("LeadCreator")
+
   @@index([role])
   @@map("profiles")
 }
@@ -113,4 +116,36 @@ model ActivityLog {
   @@index([targetType, targetId])
   @@index([action])
   @@map("activity_logs")
+}
+
+// ============================================
+// CRM / Leads
+// ============================================
+
+model Lead {
+  id             String   @id @default(uuid()) @db.Uuid
+  code           String   @unique // e.g. LD-2026-0001
+  name           String
+  email          String?
+  phone          String?
+  company        String?
+  source         String?  // referral, website, linkedin, etc.
+  serviceInterest String? // ISO standard of interest
+  status         String   @default("new") // new, contacted, meeting_scheduled, proposal_sent, negotiation, won, lost
+  assignedTo     String?  @db.Uuid @map("assigned_to") // profile id
+  notes          String?
+  estimatedValue Int?     @map("estimated_value") // in IDR
+  createdById    String?  @db.Uuid @map("created_by_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  assigned Profile? @relation("LeadAssignee", fields: [assignedTo], references: [id])
+  creator  Profile? @relation("LeadCreator", fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([assignedTo])
+  @@index([source])
+  @@index([createdById])
+  @@map("leads")
 }

@@ -41,3 +41,10 @@ export async function generateCertificateNumber(): Promise<string> {
   counters[key] = (counters[key] ?? 0) + 1;
   return `IBEZA/TRN/${year}/${pad(counters[key])}`;
 }
+
+export async function generateLeadCode(): Promise<string> {
+  const { year } = ym();
+  const key = `LD/${year}`;
+  counters[key] = (counters[key] ?? 0) + 1;
+  return `LD-${year}-${pad(counters[key])}`;
+}
