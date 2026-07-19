@@ -85,8 +85,8 @@ export function LeadForm({ leadId, defaultValues }: Props) {
         <div className="space-y-2">
           <Label>Source</Label>
           <Select
-            value={form.watch("source")}
-            onValueChange={(v) => form.setValue("source", v as CreateLeadInput["source"])}
+            defaultValue=""
+            onValueChange={(v) => form.setValue("source", (v || undefined) as CreateLeadInput["source"])}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select source" />
@@ -117,10 +117,10 @@ export function LeadForm({ leadId, defaultValues }: Props) {
       </div>
       <div className="space-y-2">
         <Label>Status</Label>
-        <Select
-          value={form.watch("status")}
-          onValueChange={(v) => form.setValue("status", v as CreateLeadInput["status"])}
-        >
+          <Select
+            defaultValue={form.getValues("status") ?? "new"}
+            onValueChange={(v) => form.setValue("status", v as CreateLeadInput["status"])}
+          >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
