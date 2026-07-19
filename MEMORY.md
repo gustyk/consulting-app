@@ -37,8 +37,18 @@
 - Backup: `src/lib/backup/run.ts` + `/api/cron/backup` route + `vercel.json` cron config
 - Font: replaced Google Geist with system font stack (build has no network for font fetch)
 
-**Blockers**:
-- Cannot run `prisma migrate dev` / `db:seed` until user fills `.env.local` + `.env` (DATABASE_URL, DATABASE_DIRECT_URL) and creates Supabase project + buckets (clients, proposals, projects, trainings, backups).
+**Blockers**: NONE — DB connected, migrated, seeded, buckets created.
+
+**Completed this pass (DB connection)**:
+- User filled `.env.local` with real Supabase credentials
+- `.env` synced with DATABASE_URL (pooler :6543) + DATABASE_DIRECT_URL (db.<ref>.supabase.co:5432)
+- Prisma 7 migration applied: `prisma/migrations/0_init/migration.sql` (6 tables: roles, permissions, role_permissions, user_roles, profiles, activity_logs)
+- KEY LEARNING: `migrate dev` hangs on pooler; use direct `db.<ref>.supabase.co:5432` for migrations. `migrate deploy` works non-interactively.
+- Seed ran: 4 roles, 41 permissions, 73 role_permissions
+- Storage buckets created (private): clients, proposals, projects, trainings, backups
+- prisma.config.ts now has `datasource.url` for migrate; runtime uses pg adapter
+
+**Next**: Phase 1.1 User & Access Management (profiles sync, user CRUD, role assignment)
 
 **Notes**:
 - Prisma 7: datasource url/directUrl removed from schema.prisma → prisma.config.ts + PrismaClient({adapter}) in src/lib/prisma/client.ts
