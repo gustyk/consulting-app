@@ -38,9 +38,16 @@ export const userService = {
 
     const userId = data.user.id;
 
-    // 2. Create profile row
-    await prisma.profile.create({
-      data: {
+    // 2. Upsert profile row (DB trigger may have already created it)
+    await prisma.profile.upsert({
+      where: { id: userId },
+      update: {
+        email: input.email,
+        fullName: input.fullName,
+        phone: input.phone,
+        role: input.role,
+      },
+      create: {
         id: userId,
         email: input.email,
         fullName: input.fullName,
@@ -49,11 +56,12 @@ export const userService = {
       },
     });
 
-    // 3. Link role
+    // 3. Link role (idempotent: replace any existing)
     const role = await prisma.role.findUnique({
       where: { name: input.role },
     });
     if (role) {
+      await prisma.userRole.deleteMany({ where: { userId } });
       await prisma.userRole.create({
         data: { userId, roleId: role.id },
       });
