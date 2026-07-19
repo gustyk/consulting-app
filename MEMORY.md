@@ -140,3 +140,15 @@
 - Always set `updated_at` in DB triggers (Prisma @updatedAt only applies via Prisma client, not raw SQL/triggers).
 
 **Next**: Run `npm run dev` for user verification, then Phase 1.2 CRM/Leads.
+
+---
+
+## 2026-07-19 — Bug Fix: AuthError Forbidden on /users
+
+**Root causes (2 bugs)**:
+1. `getServerSession()` read `role` from Supabase Auth `app_metadata` (empty) → fell back to "officer" → no permission. FIX: query `profiles.role` via Prisma (authoritative source).
+2. After fix #1, runtime Prisma used pooler `DATABASE_URL` (postgres@...pooler:6543) → `ENOIDENTIFIER` (Supavisor needs project-ref in username). FIX: `DATABASE_URL` now uses `postgres.yqmpvuzmlgdthfzrvegl@...pooler:6543`.
+
+**Verified**: `GET /users 200` with founder login. Role correctly resolves from profiles table.
+
+**Pushed**: pending commit

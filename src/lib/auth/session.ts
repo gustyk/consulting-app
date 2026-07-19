@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma/client";
 import type { User } from "@supabase/supabase-js";
 
 export type SessionUser = {
@@ -16,14 +17,20 @@ export async function getServerSession(): Promise<{ user: SessionUser | null }> 
 
   if (!user) return { user: null };
 
-  const role = (user.app_metadata?.role as string) ?? "officer";
+  // Role is authoritative from the profiles table, not auth app_metadata
+  const profile = await prisma.profile.findUnique({
+    where: { id: user.id },
+    select: { role: true, fullName: true },
+  });
+
+  const role = profile?.role ?? "officer";
 
   return {
     user: {
       id: user.id,
       email: user.email ?? "",
       role,
-      fullName: user.user_metadata?.full_name ?? null,
+      fullName: profile?.fullName ?? user.user_metadata?.full_name ?? null,
     },
   };
 }
