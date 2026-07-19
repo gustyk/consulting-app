@@ -152,3 +152,42 @@
 **Verified**: `GET /users 200` with founder login. Role correctly resolves from profiles table.
 
 **Pushed**: pending commit
+
+---
+
+## 2026-07-19 — Phase 1.2 CRM/Leads
+
+**Files**:
+- `prisma/schema.prisma` (added `Lead` model + `Profile.leadsAssigned`/`leadsCreated`)
+- `prisma/migrations/20260719084951_add_leads/migration.sql` (applied)
+- `src/lib/utils/number.ts` (added `generateLeadCode()`)
+- `src/modules/crm/types.ts`, `service.ts`, `actions.ts`, `components/lead-form.tsx`, `components/lead-list.tsx`
+- `src/app/(dashboard)/crm/page.tsx` (pipeline widgets + leads table + create form)
+
+**Completed**: Lead CRUD, pipeline status dropdown, soft-delete, activity logging, guarded server actions.
+**Bug fix**: dev server had stale generated client (started before `prisma generate`) → `prisma.lead` undefined. Fix: regenerate + restart server.
+**Select warning fix**: made Base UI `Select` components consistently uncontrolled via stable `useState` initializers (avoid controlled/uncontrolled switch).
+**Verified**: `GET /crm 200`; standalone `prisma.lead.findMany`/`groupBy` OK.
+**Pushed**: `5462997`, `9b41424`, `5ebc6e8`
+
+---
+
+## 2026-07-19 — Phase 1.3 Clients
+
+**Files**:
+- `prisma/schema.prisma` (added `Client` model: code, name, npwp, address, pic[Json], legalDocs[Json], status, createdById + `Profile.clientsCreated`)
+- `prisma/migrations/20260719101946_add_clients/migration.sql` (applied via direct DB)
+- `src/lib/utils/number.ts` (added `generateClientCode()` → `CL-YYYY-XXXX`)
+- `src/modules/clients/types.ts` (Zod: create/update, picSchema, legalDocSchema, CLIENT_STATUSES)
+- `src/modules/clients/service.ts`, `actions.ts` (guarded + logged: create/update/delete)
+- `src/modules/clients/components/client-form.tsx` (RHF + Zod, dynamic PIC rows)
+- `src/modules/clients/components/client-list.tsx` (table + view/delete)
+- `src/app/(dashboard)/clients/page.tsx` (list + create)
+- `src/app/(dashboard)/clients/[id]/page.tsx` (detail with Tabs: info, PIC, legal docs, service history placeholder + edit form)
+
+**Completed**: Client CRUD, multiple PIC (jsonb), legal docs metadata (jsonb, URL-based — full Storage upload deferred to Phase 2.5 Documents), soft delete, activity logging, detail view with tabs.
+**Notes**: `clients.*` permissions already in PERMISSIONS map + seeded (officer/finance have view; officer has full CRUD). Legal doc upload uses URL entry for now (no storage upload helper exists yet).
+**Verified**: `npm run typecheck` ✓, `npm run build` ✓ (`/clients`, `/clients/[id]` compile), standalone `prisma.client.findMany` OK, dev server restarted with regenerated client.
+**Pushed**: `9ed5105`
+
+**Next**: Phase 1.4 Proposals (model with items[], status workflow, approval rules, PDF gen)
