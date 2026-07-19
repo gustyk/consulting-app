@@ -63,6 +63,7 @@ model UserRole {
   updatedAt DateTime @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  profile Profile @relation(fields: [userId], references: [id])
   role Role @relation(fields: [roleId], references: [id])
 
   @@unique([userId, roleId])
@@ -86,6 +87,8 @@ model Profile {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")
+
+  userRoles   UserRole[]
 
   @@index([role])
   @@map("profiles")

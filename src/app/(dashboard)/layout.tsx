@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
 
 const NAV = [
+  { href: "/users", label: "Users" },
   { href: "/crm", label: "CRM" },
   { href: "/clients", label: "Clients" },
   { href: "/proposals", label: "Proposals" },

@@ -90,3 +90,31 @@
 - Phase 0.2: Create Supabase project (manual), configure connection pooler, storage buckets
 - Install Prisma + Supabase JS client, configure `.env.local`
 - Begin Phase 0.3: base Prisma schema (roles, permissions, profiles, activity_logs)
+
+---
+
+## 2026-07-18 — Phase 1.1: User & Access Management
+
+**Files**:
+- `src/modules/users/types.ts` (Zod schemas: create/update/assignRole, ROLES)
+- `src/modules/users/service.ts` (userService: list/getById/create/update/deactivate/assignRole — uses Supabase admin + Prisma)
+- `src/modules/users/actions.ts` (Server Actions: createUser/updateUser/deactivateUser/assignUserRole — guarded + logged)
+- `src/modules/users/components/user-form.tsx` (RHF + Zod create form)
+- `src/modules/users/components/user-list.tsx` (DataTable + role select + deactivate)
+- `src/app/(dashboard)/users/page.tsx` (server component, guard + list + form)
+- `prisma/schema.prisma` (added Profile.userRoles relation + UserRole.profile relation)
+- DB trigger: `handle_new_user()` on `auth.users` → auto-creates `profiles` row
+
+**Completed**:
+- User CRUD (create via Supabase Auth admin, list, role assign, deactivate)
+- Role assignment (Founder only via requireRole("founder"))
+- Server guards on all user actions (requirePermission)
+- Activity logging on create/update/deactivate/role_assign
+- Profile auto-sync via DB trigger (no manual sync needed)
+- Sidebar nav updated with Users
+
+**Tests/checks**: `npm run typecheck` ✓, `npm run build` ✓ (/users route compiles)
+
+**Blockers**: None. Manual verification (login as Founder, create user) pending real auth session.
+
+**Next**: Phase 1.2 CRM/Leads module

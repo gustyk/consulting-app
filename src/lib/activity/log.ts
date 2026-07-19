@@ -2,8 +2,8 @@ import { prisma } from "@/lib/prisma/client";
 
 type LogInput = {
   action: string;
-  actorId?: string;
-  actorName?: string;
+  actorId?: string | null;
+  actorName?: string | null;
   targetType?: string;
   targetId?: string;
   previousValue?: unknown;
