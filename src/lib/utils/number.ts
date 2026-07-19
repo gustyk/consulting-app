@@ -48,3 +48,10 @@ export async function generateLeadCode(): Promise<string> {
   counters[key] = (counters[key] ?? 0) + 1;
   return `LD-${year}-${pad(counters[key])}`;
 }
+
+export async function generateClientCode(): Promise<string> {
+  const { year } = ym();
+  const key = `CL/${year}`;
+  counters[key] = (counters[key] ?? 0) + 1;
+  return `CL-${year}-${pad(counters[key])}`;
+}

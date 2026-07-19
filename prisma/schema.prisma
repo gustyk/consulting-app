@@ -93,8 +93,35 @@ model Profile {
   leadsAssigned Lead[] @relation("LeadAssignee")
   leadsCreated  Lead[] @relation("LeadCreator")
 
+  clientsCreated Client[] @relation("ClientCreator")
+
   @@index([role])
   @@map("profiles")
+}
+
+// ============================================
+// Clients (ISO consulting customers)
+// ============================================
+
+model Client {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique // e.g. CL-2026-0001
+  name        String
+  npwp        String?  // Indonesian tax number
+  address     String?
+  pic         Json?    // [{ name, role, email, phone }]
+  legalDocs   Json?    // [{ name, type, url }]
+  status      String   @default("active") // active | inactive
+  createdById String?  @db.Uuid @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  creator Profile? @relation("ClientCreator", fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([createdById])
+  @@map("clients")
 }
 
 // ============================================
