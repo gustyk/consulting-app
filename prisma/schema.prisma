@@ -95,8 +95,10 @@ model Profile {
 
   clientsCreated Client[] @relation("ClientCreator")
 
-  proposalsCreated Proposal[] @relation("ProposalCreator")
+  proposalsCreated  Proposal[] @relation("ProposalCreator")
   proposalsApproved Proposal[] @relation("ProposalApprover")
+  projectsCreated   Project[] @relation("ProjectCreator")
+  projectPartners   ProjectPartner[]
 
   @@index([role])
   @@map("profiles")
@@ -122,6 +124,7 @@ model Client {
 
   creator    Profile?  @relation("ClientCreator", fields: [createdById], references: [id])
   proposals  Proposal[]
+  projects   Project[]
 
   @@index([status])
   @@index([createdById])
@@ -177,6 +180,7 @@ model Proposal {
   client          Client         @relation(fields: [clientId], references: [id])
   approver        Profile?       @relation("ProposalApprover", fields: [approvedById], references: [id])
   creator         Profile?       @relation("ProposalCreator", fields: [createdById], references: [id])
+  project         Project?
 
   @@index([status])
   @@index([clientId])
@@ -232,4 +236,92 @@ model Lead {
   @@index([source])
   @@index([createdById])
   @@map("leads")
+}
+
+// ============================================
+// Projects
+// ============================================
+
+model Project {
+  id              String    @id @default(uuid()) @db.Uuid
+  code            String    @unique // PRJ/YYYY/MM/XXXX
+  proposalId      String?   @unique @db.Uuid @map("proposal_id")
+  clientId        String    @db.Uuid @map("client_id")
+  status          String    @default("preparation") // preparation, gap_assessment, documentation, implementation, internal_audit, certification_audit, closed, cancelled
+  value           Int       @default(0) @map("value") // in IDR cents
+  operationalCost Int?      @map("operational_cost") // in IDR cents
+  startDate       DateTime? @map("start_date")
+  endDate         DateTime? @map("end_date")
+  createdById     String?   @db.Uuid @map("created_by_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  client       Client              @relation(fields: [clientId], references: [id])
+  proposal     Proposal?           @relation(fields: [proposalId], references: [id])
+  creator      Profile?            @relation("ProjectCreator", fields: [createdById], references: [id])
+  milestones   ProjectMilestone[]
+  deliverables ProjectDeliverable[]
+  partners     ProjectPartner[]
+
+  @@index([status])
+  @@index([clientId])
+  @@index([proposalId])
+  @@map("projects")
+}
+
+model ProjectMilestone {
+  id           String    @id @default(uuid()) @db.Uuid
+  projectId    String    @db.Uuid @map("project_id")
+  name         String
+  description  String?
+  dueDate      DateTime? @map("due_date")
+  status       String    @default("pending") // pending, in_progress, completed
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  project      Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deliverables ProjectDeliverable[]
+
+  @@index([projectId])
+  @@map("project_milestones")
+}
+
+model ProjectDeliverable {
+  id           String    @id @default(uuid()) @db.Uuid
+  projectId    String    @db.Uuid @map("project_id")
+  milestoneId  String?   @db.Uuid @map("milestone_id")
+  name         String
+  description  String?
+  fileUrl      String?   @map("file_url")
+  status       String    @default("pending") // pending, submitted, approved
+  dueDate      DateTime? @map("due_date")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  project      Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone    ProjectMilestone?  @relation(fields: [milestoneId], references: [id])
+
+  @@index([projectId])
+  @@index([milestoneId])
+  @@map("project_deliverables")
+}
+
+model ProjectPartner {
+  id                  String   @id @default(uuid()) @db.Uuid
+  projectId           String   @db.Uuid @map("project_id")
+  partnerId           String   @db.Uuid @map("partner_id") // Profile id
+  role                String?  // e.g. lead_consultant, assessor
+  revenuePercentage   Float?   @map("revenue_percentage") // 0-100
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  partner  Profile  @relation(fields: [partnerId], references: [id])
+
+  @@unique([projectId, partnerId])
+  @@index([projectId])
+  @@index([partnerId])
+  @@map("project_partners")
 }
