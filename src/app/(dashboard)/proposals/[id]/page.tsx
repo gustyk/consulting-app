@@ -115,6 +115,16 @@ export default async function ProposalDetailPage({
                   {proposal.approvedAt && <p><span className="text-muted-foreground">Approved:</span> {proposal.approvedAt.toLocaleString()} {proposal.approver ? `by ${proposal.approver.fullName}` : ""}</p>}
                   {proposal.sentAt && <p><span className="text-muted-foreground">Sent:</span> {proposal.sentAt.toLocaleString()}</p>}
                   {proposal.acceptedAt && <p><span className="text-muted-foreground">Accepted:</span> {proposal.acceptedAt.toLocaleString()}</p>}
+                  {proposal.project && (
+                    <p>
+                      <span className="text-muted-foreground">Project:</span>{" "}
+                      <Link href={`/projects/${proposal.project.id}`} className="text-blue-600 hover:underline">
+                        {proposal.project.code}
+                      </Link>
+                      {" — "}
+                      <span className="text-muted-foreground">{proposal.project.status.replace(/_/g, " ")}</span>
+                    </p>
+                  )}
                   {proposal.rejectedAt && <p><span className="text-muted-foreground">Rejected:</span> {proposal.rejectedAt.toLocaleString()}</p>}
                   {proposal.validUntil && <p><span className="text-muted-foreground">Valid until:</span> {proposal.validUntil.toLocaleDateString()}</p>}
                 </CardContent>
