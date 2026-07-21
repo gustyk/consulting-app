@@ -78,7 +78,7 @@ export const proposalService = {
         discount,
         tax,
         total,
-        validUntil: input.validUntil ?? null,
+        validUntil: input.validUntil ? new Date(input.validUntil) : null,
         createdById,
         items: {
           create: input.items.map((it) => ({
@@ -105,7 +105,7 @@ export const proposalService = {
 
     const data: Record<string, unknown> = {
       clientId: input.clientId,
-      validUntil: input.validUntil,
+      validUntil: input.validUntil ? new Date(input.validUntil) : null,
       subtotal,
       discount,
       tax,

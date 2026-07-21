@@ -99,7 +99,12 @@ export function ProposalForm({ proposalId, defaultValues, clients }: Props) {
           onValueChange={(v) => form.setValue("clientId", v || "")}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select client" />
+            <span className="flex flex-1 text-left">
+              {form.watch("clientId")
+                ? clients.find((c) => c.id === form.watch("clientId"))?.name ??
+                  form.watch("clientId")
+                : "Select client"}
+            </span>
           </SelectTrigger>
           <SelectContent>
             {clients.map((c) => (
@@ -126,7 +131,7 @@ export function ProposalForm({ proposalId, defaultValues, clients }: Props) {
       <div className="space-y-2">
         <Label>Items</Label>
         {fields.map((field, index) => (
-          <div key={field.id} className="grid grid-cols-6 gap-2 items-end border p-3 rounded">
+          <div key={field.id} className="grid grid-cols-7 gap-2 items-end border p-3 rounded">
             <div className="col-span-2 space-y-1">
               <Label className="text-xs">Service *</Label>
               <Input
@@ -134,7 +139,7 @@ export function ProposalForm({ proposalId, defaultValues, clients }: Props) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Description</Label>
+              <Label className="text-xs">Desc</Label>
               <Input
                 {...form.register(`items.${index}.description`)}
               />
@@ -148,7 +153,7 @@ export function ProposalForm({ proposalId, defaultValues, clients }: Props) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Unit Price (IDR)</Label>
+              <Label className="text-xs">Unit Price</Label>
               <Input
                 type="number"
                 min="0"
@@ -164,16 +169,16 @@ export function ProposalForm({ proposalId, defaultValues, clients }: Props) {
                 {...form.register(`items.${index}.discountPct`, { valueAsNumber: true })}
               />
             </div>
-            <div className="flex items-end gap-1">
-              <div className="space-y-1">
-                <Label className="text-xs">Tax %</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  {...form.register(`items.${index}.taxPct`, { valueAsNumber: true })}
-                />
-              </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Tax %</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                {...form.register(`items.${index}.taxPct`, { valueAsNumber: true })}
+              />
+            </div>
+            <div className="flex items-end">
               <Button
                 type="button"
                 variant="ghost"
