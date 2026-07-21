@@ -95,6 +95,9 @@ model Profile {
 
   clientsCreated Client[] @relation("ClientCreator")
 
+  proposalsCreated Proposal[] @relation("ProposalCreator")
+  proposalsApproved Proposal[] @relation("ProposalApprover")
+
   @@index([role])
   @@map("profiles")
 }
@@ -104,20 +107,21 @@ model Profile {
 // ============================================
 
 model Client {
-  id          String   @id @default(uuid()) @db.Uuid
-  code        String   @unique // e.g. CL-2026-0001
+  id          String    @id @default(uuid()) @db.Uuid
+  code        String    @unique // e.g. CL-2026-0001
   name        String
-  npwp        String?  // Indonesian tax number
+  npwp        String?   // Indonesian tax number
   address     String?
-  pic         Json?    // [{ name, role, email, phone }]
-  legalDocs   Json?    // [{ name, type, url }]
-  status      String   @default("active") // active | inactive
-  createdById String?  @db.Uuid @map("created_by_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  pic         Json?     // [{ name, role, email, phone }]
+  legalDocs   Json?     // [{ name, type, url }]
+  status      String    @default("active") // active | inactive
+  createdById String?   @db.Uuid @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  creator Profile? @relation("ClientCreator", fields: [createdById], references: [id])
+  creator    Profile?  @relation("ClientCreator", fields: [createdById], references: [id])
+  proposals  Proposal[]
 
   @@index([status])
   @@index([createdById])
@@ -143,6 +147,59 @@ model ActivityLog {
   @@index([targetType, targetId])
   @@index([action])
   @@map("activity_logs")
+}
+
+// ============================================
+// Proposals
+// ============================================
+
+model Proposal {
+  id              String         @id @default(uuid()) @db.Uuid
+  number          String         @unique // e.g. IBEZA/PROP/2026/07/0001
+  clientId        String         @db.Uuid @map("client_id")
+  status          String         @default("draft") // draft, waiting_approval, approved, sent, accepted, rejected, expired
+  items           ProposalItem[]
+  subtotal        Int            @default(0) @map("subtotal") // in IDR cents
+  discount        Int            @default(0) @map("discount") // in IDR cents
+  tax             Int            @default(0) @map("tax") // in IDR cents
+  total           Int            @default(0) @map("total") // in IDR cents
+  validUntil      DateTime?      @map("valid_until")
+  approvedById    String?        @db.Uuid @map("approved_by_id")
+  approvedAt      DateTime?      @map("approved_at")
+  sentAt          DateTime?      @map("sent_at")
+  acceptedAt      DateTime?      @map("accepted_at")
+  rejectedAt      DateTime?      @map("rejected_at")
+  createdById     String?        @db.Uuid @map("created_by_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  deletedAt       DateTime?      @map("deleted_at")
+
+  client          Client         @relation(fields: [clientId], references: [id])
+  approver        Profile?       @relation("ProposalApprover", fields: [approvedById], references: [id])
+  creator         Profile?       @relation("ProposalCreator", fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([clientId])
+  @@index([createdById])
+  @@map("proposals")
+}
+
+model ProposalItem {
+  id           String   @id @default(uuid()) @db.Uuid
+  proposalId   String   @db.Uuid @map("proposal_id")
+  service      String
+  description  String?
+  qty          Int      @default(1)
+  unitPrice    Int      @map("unit_price") // in IDR cents
+  discountPct  Float    @default(0) @map("discount_pct")
+  taxPct       Float    @default(11) @map("tax_pct") // PPN 11%
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  proposal     Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@index([proposalId])
+  @@map("proposal_items")
 }
 
 // ============================================
