@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma/client";
-import { generateProposalNumber } from "@/lib/utils/number";
+import { generateProposalNumber, generateProjectCode } from "@/lib/utils/number";
 import type {
   CreateProposalInput,
   UpdateProposalInput,
@@ -55,8 +55,9 @@ export const proposalService = {
     return prisma.proposal.findUnique({
       where: { id },
       include: {
-        client: true,
+        client: { select: { name: true, code: true, npwp: true, address: true } },
         items: { orderBy: { createdAt: "asc" } },
+        project: { select: { id: true, code: true, status: true } },
         approver: { select: { fullName: true } },
         creator: { select: { fullName: true } },
       },
@@ -152,7 +153,26 @@ export const proposalService = {
   },
 
   async accept(id: string) {
-    return prisma.proposal.update({ where: { id }, data: { status: "accepted", acceptedAt: new Date() } });
+    const proposal = await prisma.proposal.findUnique({ where: { id }, include: { client: true } });
+    if (!proposal) throw new Error("Proposal not found");
+    if (proposal.status !== "sent") throw new Error("Only sent proposals can be accepted");
+
+    const code = await generateProjectCode();
+
+    const [result] = await prisma.$transaction([
+      prisma.proposal.update({ where: { id }, data: { status: "accepted", acceptedAt: new Date() } }),
+      prisma.project.create({
+        data: {
+          code,
+          clientId: proposal.clientId,
+          proposalId: id,
+          value: proposal.total,
+          status: "preparation",
+          createdById: proposal.createdById,
+        },
+      }),
+    ]);
+    return result;
   },
 
   async reject(id: string) {
